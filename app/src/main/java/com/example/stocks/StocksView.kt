@@ -21,11 +21,13 @@ class StocksView : View {
         }
     var showStart = 0
     var itemWidth = 10f
-    var next = { showStart += 1
+    var next = {
+        showStart += 1
         invalidate()
         play()
     }
     var speed = 3000L
+    var maxVol = 0f
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
@@ -59,13 +61,15 @@ class StocksView : View {
         if (stocks.isEmpty()) {
             return
         }
-
+        var volH = 200f
         var x = 0f
-        var min = stocks[0].close
-        var max = stocks[0].close
-        var maxVol = stocks[0].volume
+        var min = stocks[showStart].close
+        var max = stocks[showStart].close
+        if (maxVol == 0f) {
+            maxVol = stocks[showStart].volume
+        }
         var maxIndex = ((width/itemWidth).toInt() + showStart).coerceAtMost(stocks.size)
-        Log.d("xsw", "$showStart   ${stocks.size}")
+        Log.d("xsw", "$showStart   $maxIndex")
         for (i in showStart..maxIndex) {
             min = min.coerceAtMost(stocks[i].close).coerceAtMost(stocks[i].open)
             max = max.coerceAtLeast(stocks[i].close).coerceAtLeast(stocks[i].open)
@@ -73,40 +77,53 @@ class StocksView : View {
         }
 
         canvas?.save()
-        canvas?.clipRect(0f,0f,width.toFloat(),height-200f)
-        canvas?.scale(1f,(height-200f)/(max-min),0f,0f)
-//        for (i in showStart..maxIndex) {
-//            if (stocks[i].close < stocks[i].open) {
-//                paint.color = Color.GREEN
-//            } else {
-//                paint.color = Color.RED
-//            }
-//            canvas?.drawRect(
-//                x,
-//                max - stocks[i].close.coerceAtMost(stocks[i].open),
-//                x + itemWidth,
-//                max - stocks[i].close.coerceAtLeast(stocks[i].open), paint
-//            )
-//            x += itemWidth
-//            if (x > width) {
-//                break
-//            }
-//        }
+        canvas?.clipRect(0f,0f,width.toFloat(),height-volH)
+        canvas?.scale(1f,(height-volH)/(max-min),0f,0f)
+        for (i in showStart..maxIndex) {
+            if (stocks[i].close < stocks[i].open) {
+                paint.color = Color.GREEN
+            } else {
+                paint.color = Color.RED
+            }
+            min = stocks[i].close.coerceAtMost(stocks[i].open)
+            max = stocks[i].close.coerceAtLeast(stocks[i].open)
+            canvas?.drawRect(
+                x,
+                max - max,
+                x + itemWidth,
+                max - min, paint
+            )
+            canvas?.drawRect(
+                x+itemWidth/2-1,
+                max - min,
+                x + itemWidth/2+1,
+                max - max, paint
+            )
+            canvas?.drawRect(
+                x+itemWidth/2-1,
+                max - min,
+                x + itemWidth/2+1,
+                max - max, paint
+            )
+            x += itemWidth
+            if (x > width) {
+                break
+            }
+        }
         canvas?.restore()
 
         x = 0f
         for (i in showStart..maxIndex){
-            var h = 200/maxVol*stocks[i].volume
+            var h = (volH - 50)/maxVol*stocks[i].volume
             if (stocks[i].pct > 0) {
                 paint.color = Color.RED
             } else {
                 paint.color = Color.GREEN
             }
-            Log.d("xsw","h is $h")
             canvas?.drawRect(
-                x,
+                x + 2,
                 height - h,
-                x + itemWidth,
+                x + itemWidth - 2,
                 height.toFloat(), paint
             )
             x += itemWidth
