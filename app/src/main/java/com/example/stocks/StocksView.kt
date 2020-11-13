@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import java.text.DecimalFormat
@@ -24,19 +23,19 @@ class StocksView : View {
             field = value
             play()
         }
-    var showStart = 0
+    var startIndex = 0
     var itemWidth = 10f
     var next = {
         if (!touch) {
-            showStart += 1
-            currentIndex = ((width / itemWidth).toInt() + showStart).coerceAtMost(stocks.size)
+            startIndex += 1
+            currentIndex = ((width / itemWidth).toInt() + startIndex).coerceAtMost(stocks.size)
             update?.invoke(stocks[currentIndex])
             invalidate()
         }
         play()
     }
     var update: ((Stock) -> Unit)? = null
-    var select: ((Stock) -> Unit)? = null
+    var select: ((Stock?) -> Unit)? = null
     var speed = 3000L
     var maxVol = 0f
     var running = false
@@ -54,7 +53,7 @@ class StocksView : View {
     }
 
     fun play() {
-        running = if (width > 0 && width / itemWidth < stocks.size - showStart) {
+        running = if (width > 0 && width / itemWidth < stocks.size - startIndex) {
             postDelayed(next, speed)
             true
         } else {
@@ -81,7 +80,7 @@ class StocksView : View {
         update = run
     }
 
-    fun setOnStockSelect(run: (Stock) -> Unit) {
+    fun setOnStockSelect(run: (Stock?) -> Unit) {
         select = run
     }
 
@@ -103,15 +102,15 @@ class StocksView : View {
         }
         var volH = 200f
         var x = 0f
-        var minA = stocks[showStart].close
-        var maxA = stocks[showStart].close
+        var minA = stocks[startIndex].close
+        var maxA = stocks[startIndex].close
         if (maxVol == 0f) {
-            maxVol = stocks[showStart].volume
+            maxVol = stocks[startIndex].volume
         }
         if (currentIndex == 0) {
-            currentIndex = ((width / itemWidth).toInt() + showStart).coerceAtMost(stocks.size - 1)
+            currentIndex = ((width / itemWidth).toInt() + startIndex).coerceAtMost(stocks.size - 1)
         }
-        for (i in showStart..currentIndex) {
+        for (i in startIndex..currentIndex) {
             minA = minA.coerceAtMost(stocks[i].low)
             maxA = maxA.coerceAtLeast(stocks[i].high)
             maxVol = maxVol.coerceAtLeast(stocks[i].volume)
@@ -120,7 +119,7 @@ class StocksView : View {
         canvas?.save()
         canvas?.clipRect(0f, 0f, width.toFloat(), height - volH)
         canvas?.scale(1f, (height - volH) / (maxA - minA), 0f, 0f)
-        for (i in showStart..currentIndex) {
+        for (i in startIndex..currentIndex) {
             if (stocks[i].close < stocks[i].open) {
                 paint.color = Color.GREEN
             } else {
@@ -152,7 +151,7 @@ class StocksView : View {
         paint.style = Paint.Style.STROKE
         x = 0f
         path.reset()
-        for (i in showStart..currentIndex) {
+        for (i in startIndex..currentIndex) {
             var p = 0f
             if (i >= 20) {
                 for (z in i - 20..i) {
@@ -172,7 +171,7 @@ class StocksView : View {
 
         x = 0f
         paint.style = Paint.Style.FILL
-        for (i in showStart..currentIndex) {
+        for (i in startIndex..currentIndex) {
             var h = (volH - 50) / maxVol * stocks[i].volume
             if (stocks[i].pct > 0) {
                 paint.color = Color.RED
@@ -189,7 +188,7 @@ class StocksView : View {
         }
 
         paint.color = Color.parseColor("#eeeeee")
-        canvas?.drawText(format.format(maxA).toString(), 10f, 10f, paint)
+        canvas?.drawText(format.format(maxA).toString(), 10f, 20f, paint)
         canvas?.drawText(format.format(minA).toString(), 10f, height - volH, paint)
     }
 
@@ -201,13 +200,16 @@ class StocksView : View {
             }
             MotionEvent.ACTION_MOVE ->
                 selectX(event.x)
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> touch = false
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                touch = false
+                select?.invoke(null)
+            }
         }
         return true
     }
 
     fun selectX(x: Float) {
-        var ind = ((x / itemWidth).toInt() + showStart).coerceAtMost(stocks.size - 1)
+        var ind = ((x / itemWidth).toInt() + startIndex).coerceAtMost(stocks.size - 1)
         select?.invoke(stocks[ind])
     }
 
