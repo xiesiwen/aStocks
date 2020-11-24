@@ -151,14 +151,35 @@ class StocksView : View {
         paint.style = Paint.Style.STROKE
         x = 0f
         path.reset()
+        var l = 10
         for (i in startIndex..currentIndex) {
             var p = 0f
-            if (i >= 20) {
-                for (z in i - 20..i) {
+            if (i >= l) {
+                for (z in i - l..i) {
                     p += stocks[z].close
                 }
-                p /= 20
-                if (i == 20) {
+                p /= l
+                if (i == l) {
+                    path.moveTo(x + itemWidth / 2, maxA - p)
+                } else {
+                    path.lineTo(x + itemWidth / 2, maxA - p)
+                }
+            }
+            x += itemWidth
+        }
+        canvas?.drawPath(path, paint)
+        path.reset()
+        x = 0f
+        paint.color = Color.parseColor("#333333")
+        l = 5
+        for (i in startIndex..currentIndex) {
+            var p = 0f
+            if (i >= l) {
+                for (z in i - l..i) {
+                    p += stocks[z].close
+                }
+                p /= l
+                if (i == l) {
                     path.moveTo(x + itemWidth / 2, maxA - p)
                 } else {
                     path.lineTo(x + itemWidth / 2, maxA - p)
