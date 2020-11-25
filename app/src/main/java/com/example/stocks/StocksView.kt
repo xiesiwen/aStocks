@@ -44,6 +44,7 @@ class StocksView : View {
     val format = DecimalFormat("0.##")
     var touch = false
     var count = 0f
+    var t = 1
 
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
@@ -174,7 +175,9 @@ class StocksView : View {
                     count += (p - p5)
                 } else {
                     canvas?.drawText(count.toString(), x, height - volH, paint)
+                    canvas?.drawText((count/t).toString(), x, height - volH - 20, paint)
                     count = (p - p5)
+                    t = 1
                 }
             }
             x += itemWidth
