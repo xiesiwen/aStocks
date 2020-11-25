@@ -43,6 +43,7 @@ class StocksView : View {
     var path = Path()
     val format = DecimalFormat("0.##")
     var touch = false
+    var count = 0f
 
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
@@ -154,15 +155,26 @@ class StocksView : View {
         var l = 10
         for (i in startIndex..currentIndex) {
             var p = 0f
+            var p5 = 0f
             if (i >= l) {
                 for (z in i - l..i) {
                     p += stocks[z].close
                 }
                 p /= l
+                for (z in i - 5..i) {
+                    p5 += stocks[z].close
+                }
+                p5 /= 5
                 if (i == l) {
                     path.moveTo(x + itemWidth / 2, maxA - p)
                 } else {
                     path.lineTo(x + itemWidth / 2, maxA - p)
+                }
+                if ((p - p5) * count > 0) {
+                    count += (p - p5)
+                } else {
+                    canvas?.drawText(count.toString(), x, height - volH, paint)
+                    count = (p - p5)
                 }
             }
             x += itemWidth
