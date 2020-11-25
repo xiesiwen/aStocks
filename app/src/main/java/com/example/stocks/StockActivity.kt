@@ -56,9 +56,11 @@ class StockActivity : Activity() {
         }
         stocksView.setOnStockSelect {
             if (it == null){
-                infos.visibility = View.GONE
+                infos.visibility = View.VISIBLE
+                dayInfo.visibility = View.GONE
             } else {
                 infos.visibility = View.INVISIBLE
+                dayInfo.visibility = View.VISIBLE
                 date.text = "日期：${it?.date}"
                 open.text = "开盘：${format.format(it?.open)}"
                 close.text = "收盘：${format.format(it?.close)}"

@@ -3,9 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="horizontal"
-    android:background="#3c3f41">
-
-
+    android:background="#3c3f41"
+    android:keepScreenOn="true"  >
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -96,11 +95,13 @@
 
 
         <LinearLayout
+            android:id="@+id/dayInfo"
             android:layout_width="150dp"
             android:orientation="vertical"
             android:gravity="center_horizontal"
             android:background="#ffffff"
             android:padding="12dp"
+            android:visibility="gone"
             android:layout_margin="12dp"
             android:layout_height="wrap_content">
             <TextView
