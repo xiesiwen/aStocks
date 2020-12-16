@@ -34,6 +34,9 @@ class StocksView : View {
         }
         play()
     }
+    var dif = mapOf<Int,Float>()
+    var dea = mapOf<Int, Float>()
+    var macd = mapOf<Int, Float>()
     var update: ((Stock) -> Unit)? = null
     var select: ((Stock?) -> Unit)? = null
     var speed = 3000L
@@ -185,8 +188,29 @@ class StocksView : View {
         canvas?.drawPath(path, paint)
         path.reset()
         x = 0f
-        paint.color = Color.parseColor("#333333")
+        paint.color = Color.parseColor("#800080")
         l = 5
+        for (i in startIndex..currentIndex) {
+            var p = 0f
+            if (i >= l) {
+                for (z in i - l..i) {
+                    p += stocks[z].close
+                }
+                p /= l
+                if (i == l) {
+                    path.moveTo(x + itemWidth / 2, maxA - p)
+                } else {
+                    path.lineTo(x + itemWidth / 2, maxA - p)
+                }
+            }
+            x += itemWidth
+        }
+        canvas?.drawPath(path, paint)
+
+        path.reset()
+        x = 0f
+        paint.color = Color.parseColor("#333333")
+        l = 30
         for (i in startIndex..currentIndex) {
             var p = 0f
             if (i >= l) {

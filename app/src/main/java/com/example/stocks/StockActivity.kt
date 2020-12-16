@@ -17,9 +17,15 @@ import java.text.DecimalFormat
 class StockActivity : Activity() {
     var ss = arrayListOf<Stock>()
     var fs = arrayOf("")
-    var curStock:Stock? = null
+    var curStock: Stock? = null
     var b = 0f
     var format = DecimalFormat("0.##")
+    var ema12 = mutableMapOf<Int, Float>()
+    var ema26 = mutableMapOf<Int, Float>()
+    var dif = mutableMapOf<Int, Float>()
+    var dea = mutableMapOf<Int, Float>()
+    var macd = mutableMapOf<Int, Float>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_stock)
@@ -32,15 +38,15 @@ class StockActivity : Activity() {
         sale.setOnClickListener {
             var o = curStock?.close ?: 0f
             if (o > b) {
-                AlertDialog.Builder(this).setMessage("WIN: ${(o/b-1)*100}").show()
+                AlertDialog.Builder(this).setMessage("WIN: ${(o / b - 1) * 100}").show()
                 val sharedPreferences = getSharedPreferences("stock", Context.MODE_PRIVATE)
                 val int = sharedPreferences.getInt("win", 0)
-                sharedPreferences.edit().putInt("win", int+1).apply()
+                sharedPreferences.edit().putInt("win", int + 1).apply()
             } else {
-                AlertDialog.Builder(this).setMessage("LOSS: ${(o/b-1)*100}").show()
+                AlertDialog.Builder(this).setMessage("LOSS: ${(o / b - 1) * 100}").show()
                 val sharedPreferences = getSharedPreferences("stock", Context.MODE_PRIVATE)
                 val int = sharedPreferences.getInt("loss", 0)
-                sharedPreferences.edit().putInt("loss", int+1).apply()
+                sharedPreferences.edit().putInt("loss", int + 1).apply()
             }
             stocksView.stop()
         }
@@ -52,10 +58,13 @@ class StockActivity : Activity() {
                 info.setTextColor(Color.GREEN)
             }
             val format = DecimalFormat("0.##")
-            info.text = "${stock.date}  ${format.format(stock.close)}  ${if (stock.pct>0) "+" else ""}${format.format(stock.pct)}%"
+            info.text =
+                "${stock.date}  ${format.format(stock.close)}  ${if (stock.pct > 0) "+" else ""}${format.format(
+                    stock.pct
+                )}%"
         }
         stocksView.setOnStockSelect {
-            if (it == null){
+            if (it == null) {
                 infos.visibility = View.GONE
             } else {
                 infos.visibility = View.INVISIBLE
@@ -68,7 +77,7 @@ class StockActivity : Activity() {
             }
         }
         list.setOnClickListener {
-            if (listView.visibility == View.GONE){
+            if (listView.visibility == View.GONE) {
                 listView.visibility = View.VISIBLE
             } else {
                 listView.visibility = View.GONE
@@ -80,7 +89,7 @@ class StockActivity : Activity() {
         select(fs[0])
     }
 
-    fun select(file:String){
+    fun select(file: String) {
         ExecUtils.runOnIOThread {
             var inp = assets.open("stocks/$file")
             var bs = ByteArray(inp.available())
@@ -104,10 +113,78 @@ class StockActivity : Activity() {
                     }
                 }
             }
+            computeEma(12, ss.size - 1)
+            computeEma(26, ss.size - 1)
+            for (i in 0 until ss.size) {
+                if (ema12[i] == null) {
+                    ema12[i] = ss[i].close
+                }
+                if (ema26[i] == null) {
+                    ema26[i] = ss[i].close
+                }
+                dif[i] = ema12[i]!! - ema26[i]!!
+            }
+            computeEma(9, ss.size -1)
+            for (i in 0 until ss.size) {
+                if (dea[i] == null) {
+                    dea[i] = dif[i]!!
+                }
+                macd[i] = 2 * (dif[i]!! - dea[i]!!)
+            }
             ExecUtils.runOnMainThread {
                 stocksView.stocks = ss
-                stocksView.startIndex = (0..ss.size/2).random()
+                stocksView.dif = dif
+                stocksView.dea = dea
+                stocksView.macd = macd
+                stocksView.startIndex = (0..ss.size / 2).random()
             }
         }
+    }
+
+    fun computeEma(days: Int, index: Int): Float {
+        if (days == 12) {
+            var res = when {
+                index == 11 -> {
+                    ss[11].close
+                }
+                ema12.containsKey(index - 1) -> {
+                    (ema12[index - 1] ?: error("")) * 11 / 13 + ss[index].close / 13 * 2
+                }
+                else -> {
+                    computeEma(days, index - 1) * 11 / 13 + ss[index].close / 13 * 2
+                }
+            }
+            ema12[index] = res
+            return res
+        } else if (days == 25){
+            var res = when {
+                index == 25 -> {
+                    ss[25].close
+                }
+                ema26.containsKey(index - 1) -> {
+                    (ema26[index - 1] ?: error("")) * 25 / 27 + ss[index].close / 27 * 2
+                }
+                else -> {
+                    computeEma(days, index - 1) * 25 / 27 + ss[index].close / 27 * 2
+                }
+            }
+            ema26[index] = res
+            return res
+        } else if (days == 9) {
+            var res = when {
+                index == 9 -> {
+                    dif[9]!!
+                }
+                dea.containsKey(index - 1) -> {
+                    (dif[index - 1] ?: error("")) * 8 / 10 + dif[index]!! / 10 * 2
+                }
+                else -> {
+                    computeEma(days, index - 1) * 8 / 10 + dif[index]!! / 10 * 2
+                }
+            }
+            dea[index] = res
+            return res
+        }
+        return 0f;
     }
 }
