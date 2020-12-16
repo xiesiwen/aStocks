@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import java.text.DecimalFormat
@@ -161,11 +162,11 @@ class StocksView : View {
             var p = 0f
             var p5 = 0f
             if (i >= l) {
-                for (z in i - l..i) {
+                for (z in i - l+1..i) {
                     p += stocks[z].close
                 }
                 p /= l
-                for (z in i - 5..i) {
+                for (z in i - 4..i) {
                     p5 += stocks[z].close
                 }
                 p5 /= 5
@@ -174,12 +175,16 @@ class StocksView : View {
                 } else {
                     path.lineTo(x + itemWidth / 2, maxA - p)
                 }
-                if ((p - p5) * count > 0) {
-                    count += (p - p5)
+                var gap = p5 - p
+                if (gap * count >= 0) {
+                    count += gap
+                    t += 1
+//                    Log.d("xsw", "${p5-p}  $t")
                 } else {
-                    canvas?.drawText(count.toString(), x, height - volH, paint)
-                    canvas?.drawText((count/t).toString(), x, height - volH - 20, paint)
-                    count = (p - p5)
+                    Log.d("xsw", "${format.format(count)}   ${t}  ${format.format(count/t)}")
+                    canvas?.drawText(format.format(count).toString(), x, height - volH - 20, paint)
+                    canvas?.drawText(format.format(count/t).toString(), x, height - volH - 40, paint)
+                    count = gap
                     t = 1
                 }
             }
@@ -193,7 +198,7 @@ class StocksView : View {
         for (i in startIndex..currentIndex) {
             var p = 0f
             if (i >= l) {
-                for (z in i - l..i) {
+                for (z in i - l+1..i) {
                     p += stocks[z].close
                 }
                 p /= l
