@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import java.text.DecimalFormat
+import kotlin.math.abs
 
 /**
  * @author xiejw@133.cn
@@ -49,6 +50,7 @@ class StocksView : View {
     var touch = false
     var count = 0f
     var t = 1
+    var drawMacd = false
 
     constructor(context: Context, attributeSet: AttributeSet) : super(context, attributeSet)
 
@@ -56,6 +58,13 @@ class StocksView : View {
         super.onLayout(changed, left, top, right, bottom)
         itemWidth = width.toFloat() / ((width / itemWidth).toInt())
         paint.color = Color.RED
+    }
+
+    fun nextPos(){
+        startIndex += 1
+        currentIndex = ((width / itemWidth).toInt() + startIndex).coerceAtMost(stocks.size)
+        update?.invoke(stocks[currentIndex])
+        invalidate()
     }
 
     fun play() {
@@ -110,6 +119,7 @@ class StocksView : View {
         var x = 0f
         var minA = stocks[startIndex].close
         var maxA = stocks[startIndex].close
+        var maxMacd = abs(macd[startIndex] ?: error(""))
         if (maxVol == 0f) {
             maxVol = stocks[startIndex].volume
         }
@@ -120,6 +130,7 @@ class StocksView : View {
             minA = minA.coerceAtMost(stocks[i].low)
             maxA = maxA.coerceAtLeast(stocks[i].high)
             maxVol = maxVol.coerceAtLeast(stocks[i].volume)
+            maxMacd = maxMacd.coerceAtLeast(abs(macd[i] ?: error("")))
         }
 
         canvas?.save()
@@ -179,7 +190,6 @@ class StocksView : View {
                 if (gap * count >= 0) {
                     count += gap
                     t += 1
-//                    Log.d("xsw", "${p5-p}  $t")
                 } else {
                     Log.d("xsw", "${format.format(count)}   ${t}  ${format.format(count/t)}")
                     canvas?.drawText(format.format(count).toString(), x, height - volH - 20, paint)
@@ -236,20 +246,38 @@ class StocksView : View {
 
         x = 0f
         paint.style = Paint.Style.FILL
-        for (i in startIndex..currentIndex) {
-            var h = (volH - 50) / maxVol * stocks[i].volume
-            if (stocks[i].pct > 0) {
-                paint.color = Color.RED
-            } else {
-                paint.color = Color.GREEN
+        if (drawMacd) {
+            for (i in startIndex..currentIndex) {
+                var h = abs((volH - 50) / maxMacd * macd[i]!!)
+                if (macd[i]!! > 0) {
+                    paint.color = Color.RED
+                } else {
+                    paint.color = Color.GREEN
+                }
+                canvas?.drawRect(
+                    x + 2,
+                    height - h,
+                    x + itemWidth - 2,
+                    height.toFloat(), paint
+                )
+                x += itemWidth
             }
-            canvas?.drawRect(
-                x + 2,
-                height - h,
-                x + itemWidth - 2,
-                height.toFloat(), paint
-            )
-            x += itemWidth
+        } else {
+            for (i in startIndex..currentIndex) {
+                var h = (volH - 50) / maxVol * stocks[i].volume
+                if (stocks[i].pct > 0) {
+                    paint.color = Color.RED
+                } else {
+                    paint.color = Color.GREEN
+                }
+                canvas?.drawRect(
+                    x + 2,
+                    height - h,
+                    x + itemWidth - 2,
+                    height.toFloat(), paint
+                )
+                x += itemWidth
+            }
         }
 
         paint.color = Color.parseColor("#eeeeee")

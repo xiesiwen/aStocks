@@ -17,6 +17,7 @@ class MainActivity : Activity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         btnC.setOnClickListener { startActivity(Intent(this, StockActivity::class.java)) }
+        practice.setOnClickListener { startActivity(Intent(this, Stock2Activity::class.java)) }
         val sharedPreferences = getSharedPreferences("stock", Context.MODE_PRIVATE)
         val int = sharedPreferences.getInt("win", 0)
         val loss = sharedPreferences.getInt("loss", 0)
