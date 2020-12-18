@@ -248,18 +248,25 @@ class StocksView : View {
         paint.style = Paint.Style.FILL
         if (drawMacd) {
             for (i in startIndex..currentIndex) {
-                var h = abs((volH - 50) / maxMacd * macd[i]!!)
+                var vh = (volH - 50)/ 2
+                var h = vh / maxMacd * macd[i]!!
                 if (macd[i]!! > 0) {
                     paint.color = Color.RED
+                    canvas?.drawRect(
+                        x + 2,
+                        height - vh - h,
+                        x + itemWidth - 2,
+                        height - vh, paint
+                    )
                 } else {
                     paint.color = Color.GREEN
+                    canvas?.drawRect(
+                        x + 2,
+                        height - vh,
+                        x + itemWidth - 2,
+                        height -vh - h, paint
+                    )
                 }
-                canvas?.drawRect(
-                    x + 2,
-                    height - h,
-                    x + itemWidth - 2,
-                    height.toFloat(), paint
-                )
                 x += itemWidth
             }
         } else {
