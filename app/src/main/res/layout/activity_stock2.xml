@@ -27,18 +27,9 @@
             android:paddingRight="12dp">
 
             <TextView
-                android:id="@+id/list"
-                style="@style/actionBtn"
-                android:layout_marginLeft="220dp"
-                android:text="列表" />
-
-            <Space
                 android:layout_width="0dp"
-                android:layout_height="1dp"
-                android:layout_weight="1" />
-
-            <TextView
-                android:layout_width="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
                 android:layout_height="wrap_content"
                 android:id="@+id/info"
                 android:textSize="15sp"/>
@@ -73,6 +64,12 @@
             android:visibility="gone"
             android:id="@+id/listView"/>
 
+        <TextView
+            android:id="@+id/list"
+            style="@style/actionBtn"
+            android:layout_marginTop="2dp"
+            android:layout_marginLeft="50dp"
+            android:text="列表" />
 
         <LinearLayout
             android:id="@+id/dayInfo"
@@ -119,4 +116,5 @@
         </LinearLayout>
 
     </FrameLayout>
+
 </FrameLayout>

@@ -4,10 +4,12 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import kotlinx.android.synthetic.main.activity_stock.*
+import java.lang.Exception
 import java.text.DecimalFormat
 
 /**
@@ -29,7 +31,7 @@ class StockActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_stock)
-        fs = assets.list("stocks") as Array<String>
+        fs = assets.list("stocks/chan") as Array<String>
         listView.adapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, fs)
         stop.setOnClickListener { stocksView.toggle() }
         acc.setOnClickListener { speed.text = stocksView.acceleration() }
@@ -65,7 +67,7 @@ class StockActivity : Activity() {
         }
         stocksView.setOnStockSelect {
 
-            if (it == null){
+            if (it == null) {
                 infos.visibility = View.VISIBLE
                 dayInfo.visibility = View.GONE
             } else {
@@ -93,8 +95,11 @@ class StockActivity : Activity() {
     }
 
     fun select(file: String) {
+        progress.visibility = View.VISIBLE
         ExecUtils.runOnIOThread {
-            var inp = assets.open("stocks/$file")
+            ss.clear()
+            stocksView.invalidate()
+            var inp = assets.open("stocks/chan/$file")
             var bs = ByteArray(inp.available())
             inp.read(bs)
             var data = String(bs)
@@ -116,6 +121,7 @@ class StockActivity : Activity() {
                     }
                 }
             }
+
             computeEma(12, ss.size - 1)
             computeEma(26, ss.size - 1)
             for (i in 0 until ss.size) {
@@ -127,19 +133,21 @@ class StockActivity : Activity() {
                 }
                 dif[i] = ema12[i]!! - ema26[i]!!
             }
-            computeEma(9, ss.size -1)
+            computeEma(9, ss.size - 1)
             for (i in 0 until ss.size) {
                 if (dea[i] == null) {
                     dea[i] = dif[i]!!
                 }
                 macd[i] = 2 * (dif[i]!! - dea[i]!!)
             }
+
             ExecUtils.runOnMainThread {
                 stocksView.stocks = ss
                 stocksView.dif = dif
                 stocksView.dea = dea
                 stocksView.macd = macd
                 stocksView.startIndex = (0..ss.size / 2).random()
+                progress.visibility = View.GONE
             }
         }
     }
@@ -159,7 +167,7 @@ class StockActivity : Activity() {
             }
             ema12[index] = res
             return res
-        } else if (days == 25){
+        } else if (days == 25) {
             var res = when {
                 index == 25 -> {
                     ss[25].close

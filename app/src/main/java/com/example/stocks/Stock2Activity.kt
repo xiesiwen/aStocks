@@ -92,14 +92,18 @@ class Stock2Activity : Activity() {
             }
         }
         listView.setOnItemClickListener { parent, view, position, id ->
+
             select(fs[position])
+            listView.visibility = View.GONE
         }
         select(fs[0])
     }
 
     fun select(file: String) {
+        ss.clear()
+        stocksView.invalidate()
         ExecUtils.runOnIOThread {
-            var inp = assets.open("stocks/$file")
+            var inp = assets.open("stocks/practice/$file")
             var bs = ByteArray(inp.available())
             inp.read(bs)
             var data = String(bs)
@@ -145,7 +149,8 @@ class Stock2Activity : Activity() {
                 stocksView.dea = dea
                 stocksView.macd = macd
                 val split = file.split(".")
-                stocksView.startIndex = 0.coerceAtLeast(split[1].toInt() - 60)
+                stocksView.startMaxIndex = split[1].toInt()
+                stocksView.stop()
             }
         }
     }
